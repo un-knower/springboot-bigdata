@@ -4,8 +4,10 @@ import com.cmsz.springboot.annotation.storm.StormBolt;
 import com.cmsz.springboot.enums.GroupTypeEnums;
 import com.cmsz.springboot.service.storm.StormIServer;
 import com.cmsz.springboot.utils.SpringUtil;
+import org.apache.commons.lang.StringUtils;
 import org.apache.storm.generated.StormTopology;
 import org.apache.storm.kafka.KafkaSpout;
+import org.apache.storm.kafka.bolt.KafkaBolt;
 import org.apache.storm.topology.IRichBolt;
 import org.apache.storm.topology.IRichSpout;
 import org.apache.storm.topology.TopologyBuilder;
@@ -45,13 +47,22 @@ public abstract class StormServerImpl extends PublicServiceImpl implements Storm
         for(IRichBolt iRichBolt:iRichBolts){
             StormBolt stormBolt=iRichBolt.getClass().getAnnotation(StormBolt.class);
             String boltId=stormBolt.id();
-//            String previousBolt=stormBolt.previousBolt();
             int boltParallelism=stormBolt.parallelism_hint();
             String groupType=stormBolt.groupType();
+            String streamId=stormBolt.StreamId();
             if(groupType.equals(GroupTypeEnums.SHUFFLE.getValue())){
-                topologyBuilder.setBolt(boltId,iRichBolt,boltParallelism).shuffleGrouping(stormBolt.groupName());
+                /*判断是否有steamid*/
+                if(StringUtils.isEmpty(streamId)){
+                    topologyBuilder.setBolt(boltId,iRichBolt,boltParallelism).shuffleGrouping(stormBolt.groupName());
+                }else{
+                    topologyBuilder.setBolt(boltId,iRichBolt,boltParallelism).shuffleGrouping(stormBolt.groupName(),streamId);
+                }
             }else {
-                topologyBuilder.setBolt(boltId,iRichBolt,boltParallelism).fieldsGrouping(stormBolt.groupName(),new Fields(stormBolt.fieldsGroupFile()));
+                if(StringUtils.isEmpty(streamId)){
+                    topologyBuilder.setBolt(boltId,iRichBolt,boltParallelism).fieldsGrouping(stormBolt.groupName(),new Fields(stormBolt.fieldsGroupFile()));
+                }else{
+                    topologyBuilder.setBolt(boltId,iRichBolt,boltParallelism).fieldsGrouping(stormBolt.groupName(),streamId,new Fields(stormBolt.fieldsGroupFile()));
+                }
             }
         }
         return topologyBuilder.createTopology();

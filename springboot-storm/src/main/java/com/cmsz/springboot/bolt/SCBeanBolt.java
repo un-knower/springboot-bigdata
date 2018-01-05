@@ -7,6 +7,7 @@ import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
+import org.apache.storm.tuple.Values;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,11 +32,13 @@ public class SCBeanBolt extends BaseRichBolt {
     public void execute(Tuple tuple) {
         String message=tuple.getString(0);
         System.out.println("======"+message);
+        String key="lile";
+        collector.emit(new Values(key,message));
         collector.ack(tuple);
     }
 
     @Override
     public void declareOutputFields(OutputFieldsDeclarer outputFieldsDeclarer) {
-        outputFieldsDeclarer.declare(new Fields("flag"));
+        outputFieldsDeclarer.declare(new Fields("key","value"));
     }
 }

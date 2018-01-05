@@ -18,10 +18,6 @@ public class SpringbootStormApplicationTests {
 
 	@Test
     public void testStorm() throws Exception {
-        Config conf=new Config();
-        conf.setNumAckers(1);
-        conf.setDebug(true);
-        conf.setMaxTaskParallelism(2);
-        stormOperateServer.autoBuildStormTopology("SpringStorm",conf,"local");
+        stormOperateServer.autoBuildStormTopology("SpringStorm","local");
     }
 }

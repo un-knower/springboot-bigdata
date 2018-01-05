@@ -23,4 +23,6 @@ public @interface StormBolt {
     String groupName() default "";
     /*类型分组名*/
     String fieldsGroupFile() default "";
+   /*流id*/
+    String StreamId() default "";
 }

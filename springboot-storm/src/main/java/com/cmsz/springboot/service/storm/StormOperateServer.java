@@ -8,4 +8,8 @@ import org.apache.storm.Config;
 public interface StormOperateServer {
     /*自动构建topology*/
     void autoBuildStormTopology(String topologyName, Config conf, String modelType) throws Exception;
+
+    /*自动构建topology默认配置*/
+    void autoBuildStormTopology(String topologyName, String modelType) throws Exception;
+
 }
