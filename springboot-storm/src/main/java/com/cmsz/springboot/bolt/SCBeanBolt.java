@@ -31,7 +31,7 @@ public class SCBeanBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         String message=tuple.getString(0);
-        System.out.println("======"+message);
+        logger.info("接受消息体{}",message);
         String key="lile";
         collector.emit(new Values(key,message));
         collector.ack(tuple);

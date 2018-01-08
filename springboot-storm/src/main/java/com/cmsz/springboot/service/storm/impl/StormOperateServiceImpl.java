@@ -1,11 +1,14 @@
 package com.cmsz.springboot.service.storm.impl;
 
+import com.cmsz.springboot.SpringbootStormApplication;
 import com.cmsz.springboot.service.storm.StormOperateServer;
 import org.apache.storm.Config;
 import org.apache.storm.LocalCluster;
 import org.apache.storm.StormSubmitter;
 import org.apache.storm.generated.StormTopology;
 import org.apache.storm.utils.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Properties;
@@ -15,6 +18,8 @@ import java.util.Properties;
  */
 @Service(value = "stormOperateService")
 public class StormOperateServiceImpl  extends StormServerImpl implements StormOperateServer {
+
+    private static Logger logger = LoggerFactory.getLogger(SpringbootStormApplication.class);
 
     @Override
     public void autoBuildStormTopology(String topologyName, Config conf,String modelType) throws Exception{
@@ -35,7 +40,11 @@ public class StormOperateServiceImpl  extends StormServerImpl implements StormOp
         if(modelType.equals("local")){
            buildStormLocalType(topologyName,conf);
         }else{
-            StormSubmitter.submitTopology(topologyName, conf, buildStormTopology());
+            logger.info("==========准备部署到storm集群中===============");
+            StormTopology stormTopology=buildStormTopology();
+            logger.info("==========准备发布到storm集群中===============");
+            StormSubmitter.submitTopology(topologyName, conf, stormTopology);
+            logger.info("==========发布storm集群成功===============");
         }
     }
 
@@ -45,9 +54,9 @@ public class StormOperateServiceImpl  extends StormServerImpl implements StormOp
             /*自动构建topology图*/
         StormTopology stormTopology=buildStormTopology();
         cluster.submitTopology(topologyName, conf, stormTopology);
-        System.out.println("===============构建storm topology 成功======================");
+        System.out.println("===============构建storm 本地模式 topology 成功======================");
         Utils.sleep(100000);
-        System.out.println("===============关闭storm topology======================");
+        System.out.println("===============关闭storm 本地模式 topology======================");
         cluster.killTopology(topologyName);
         cluster.shutdown();
     }
