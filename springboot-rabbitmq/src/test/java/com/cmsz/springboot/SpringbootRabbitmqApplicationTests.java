@@ -16,7 +16,7 @@ public class SpringbootRabbitmqApplicationTests {
 
 	@Test
 	public void contextLoads() throws Exception {
-		rabbitMQService.sendMessage("spms","测试4");
+		rabbitMQService.sendMessage("spms","测试-lile-1");
 	}
 
 }

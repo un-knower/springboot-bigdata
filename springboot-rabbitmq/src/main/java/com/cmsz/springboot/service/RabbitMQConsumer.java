@@ -2,8 +2,10 @@ package com.cmsz.springboot.service;
 
 import com.rabbitmq.client.*;
 import com.rabbitmq.client.impl.AMQImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
@@ -13,26 +15,24 @@ import java.util.concurrent.TimeoutException;
 @Component
 public class RabbitMQConsumer {
 
-    private static String EXCHANGE_NAME="HYTC";
+    /*交换机名称*/
+    private static final String EXCHANGE_NAME="HYTC";
+
+    private static final String QUEUE_NAME="spms";
+
+    @Resource(name = "rabbitMQConnection")
+    private Connection connection;
 
     public void consumerMessage() throws IOException, TimeoutException, InterruptedException {
         System.out.println("=========开始创建rabbitmq接受消息=========");
-        //创建连接工厂
-        ConnectionFactory factory = new ConnectionFactory();
-        //设置RabbitMQ相关信息
-        factory.setHost("192.168.5.60");
-        factory.setPort(5671);
-        factory.setUsername("lile");
-        factory.setPassword("123");
-        factory.setVirtualHost("/hadoop");
-        //创建一个新的连接
-        Connection connection = factory.newConnection();
         //创建一个通道
         Channel channel = connection.createChannel();
         /*声明绑定的交换机及类型*/
         channel.exchangeDeclare(EXCHANGE_NAME,"fanout");
-        String queueName = channel.queueDeclare().getQueue();
-        channel.queueBind(queueName, EXCHANGE_NAME, "");
+        /*随机生成一个队列*/
+//        String queueName = channel.queueDeclare().getQueue();
+        /*绑定队列与交换机*/
+        channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
         /*每次只允许消费一条消息*/
         channel.basicQos(1);
         final Consumer consumer = new DefaultConsumer(channel) {
@@ -42,9 +42,8 @@ public class RabbitMQConsumer {
                                        AMQP.BasicProperties properties,
                                        byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
-                System.out.println("Worker1  Received '" + message + "'");
                 try {
-                    throw  new Exception();
+                    System.out.println("Worker1  Received '" + message + "'");
                     //doWork(message);
                 }catch (Exception e){
                     channel.abort();
@@ -56,6 +55,6 @@ public class RabbitMQConsumer {
         };
         boolean autoAck=false;
         //消息消费完成确认
-        channel.basicConsume(EXCHANGE_NAME, autoAck, consumer);
+        channel.basicConsume(QUEUE_NAME, autoAck, consumer);
     }
 }
