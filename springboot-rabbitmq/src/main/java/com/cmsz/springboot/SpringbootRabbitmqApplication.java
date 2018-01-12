@@ -11,8 +11,14 @@ import java.util.concurrent.TimeoutException;
 @SpringBootApplication
 public class SpringbootRabbitmqApplication {
 
-	public static void main(String[] args) throws InterruptedException, TimeoutException, IOException {
+	public static void main(String[] args) throws Exception {
 		ApplicationContext ac=SpringApplication.run(SpringbootRabbitmqApplication.class, args);
-	    ac.getBean(RabbitMQConsumer.class).consumerMessage();
+//		ac.getBean(RabbitMQConsumer.class).consumerRealTimeMessage("spms");
+		RabbitMQConsumer rabbitMQConsumer=ac.getBean(RabbitMQConsumer.class);
+//		rabbitMQConsumer.consumerRealTimeMessage("spms");
+//		rabbitMQConsumer.consumerDelayMessage("message_ttl_queue");
+		rabbitMQConsumer.consumerAlipyOrderMessage("spms");
+		rabbitMQConsumer.consumerAlipyOrDerDelayMessage("message_ttl_queue");
+
 	}
 }
