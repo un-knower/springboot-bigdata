@@ -12,8 +12,8 @@ import java.awt.*;
 /**
  * Created by le on 2018/1/9.
  */
-@RestController
-@RequestMapping("rabbitmq")
+//@RestController
+//@RequestMapping("rabbitmq")
 public class MessageController {
 
     @Autowired

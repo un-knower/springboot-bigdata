@@ -15,10 +15,10 @@ public class SpringbootRabbitmqApplication {
 		ApplicationContext ac=SpringApplication.run(SpringbootRabbitmqApplication.class, args);
 //		ac.getBean(RabbitMQConsumer.class).consumerRealTimeMessage("spms");
 		RabbitMQConsumer rabbitMQConsumer=ac.getBean(RabbitMQConsumer.class);
-//		rabbitMQConsumer.consumerRealTimeMessage("spms");
+		rabbitMQConsumer.consumerRealTimeMessage("spms");
 //		rabbitMQConsumer.consumerDelayMessage("message_ttl_queue");
-		rabbitMQConsumer.consumerAlipyOrderMessage("spms");
-		rabbitMQConsumer.consumerAlipyOrDerDelayMessage("message_ttl_queue");
+//		rabbitMQConsumer.consumerAlipyOrderMessage("spms");
+//		rabbitMQConsumer.consumerAlipyOrDerDelayMessage("message_ttl_queue");
 
 	}
 }

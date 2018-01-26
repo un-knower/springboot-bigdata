@@ -2,6 +2,7 @@ package com.cmsz.springboot;
 
 import com.cmsz.springboot.service.RabbitMQConsumer;
 import com.cmsz.springboot.service.RabbitMQService;
+import com.cmsz.springboot.service.RedisLockService;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -23,24 +24,30 @@ public class SpringbootRabbitmqApplicationTests {
 
     @Resource(name = "rabbitMQService")
 	private RabbitMQService rabbitMQService;
-
+//
     @Resource(name = "rabbitMQConsumer")
 	private RabbitMQConsumer rabbitMQConsumer;
 
+	@Resource(name = "redisLockService")
+	private RedisLockService redisLockService;
 
 
 	@Test
 	public void contextLoads() throws Exception {
-//		rabbitMQService.sendMessage("spms","测试-lile-1");
-//		rabbitMQService.sendDelayMessage("测试-lile-1");
+		Boolean flag=redisLockService.tryLock("lile",5);
+		if(flag){
+			System.out.println("xxxxxxx");
+		}else{
+			System.out.println("已");
+		}
 	}
 
 	@Test
 	public void testSend() throws IOException, TimeoutException {
-		rabbitMQService.sendDelayMessage("lilessssssss","2000");
-//		rabbitMQService.sendRealTimeMessage("spms","lile12xxx222");
+//		rabbitMQService.sendDelayMessage("lilessssssss","2000");
+		rabbitMQService.sendRealTimeMessage("spms","lzz1exxx222");
 	}
-
+//
    @Test
 	public void testDelayConsumer() throws Exception {
         rabbitMQConsumer.consumerRealTimeMessage("spms");
