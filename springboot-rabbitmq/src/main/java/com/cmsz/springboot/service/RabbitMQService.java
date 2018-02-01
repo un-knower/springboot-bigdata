@@ -9,7 +9,7 @@ import java.util.concurrent.TimeoutException;
  */
 public interface RabbitMQService {
     /*带queue的发送消息体*/
-    void sendRealTimeMessage(String queue,String message);
+    boolean sendRealTimeMessage(String exchangeName,String message);
 
     /*不带queue的发送消息体，发送至交互机内，队下一个列队中只要绑定了该消息体，就可以接受*/
     void sendMessage(String message);
@@ -22,4 +22,6 @@ public interface RabbitMQService {
 
     /*发送alipay订单延迟消息*/
     void sendAlipyDelayOrder(String message,String ttl);
+
+    void reSendRealTimeMessage(String messageId);
 }

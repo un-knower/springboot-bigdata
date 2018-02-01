@@ -1,14 +1,20 @@
 package com.cmsz.springboot.service.impl;
 
+import com.cmsz.springboot.dao.MessageBean;
+import com.cmsz.springboot.dao.mapper.MessageHanderMapper;
 import com.cmsz.springboot.service.RabbitMQService;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -16,6 +22,8 @@ import java.util.concurrent.TimeoutException;
  */
 @Service(value = "rabbitMQService")
 public class RabbitMQServiceImpl implements RabbitMQService {
+
+    private static final Logger logger = LoggerFactory.getLogger(RabbitMQServiceImpl.class);
 
     private static  SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
@@ -40,13 +48,22 @@ public class RabbitMQServiceImpl implements RabbitMQService {
     @Value("${rabbitmq.exchage.routing.key}")
     private String routingKey;
 
+    @Autowired
+    private MessageHanderMapper messageHanderMapper;
+
     @Override
-    public void sendRealTimeMessage(String topic, String message) {
+    public boolean sendRealTimeMessage(String exchageName, String message) {
+        Boolean result=false;
         //创建一个通道
         try {
+            AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties.Builder();
+            builder.messageId(generateMessageUUID(exchageName));
+            builder.deliveryMode(2);
+            AMQP.BasicProperties properties = builder.build();
            /*声明绑定的交换机及类型*/
-            realTimeChannel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
-            System.out.println("Producer Send +'" + message + "'");
+            realTimeChannel.basicPublish(exchageName, "", properties, message.getBytes("UTF-8"));
+            result=true;
+            logger.info("发送消息体: {}",message);
         } catch (IOException e) {
             e.printStackTrace();
             try {
@@ -56,7 +73,7 @@ public class RabbitMQServiceImpl implements RabbitMQService {
                 e1.printStackTrace();
             }
         }
-
+        return result;
     }
 
     @Override
@@ -130,6 +147,41 @@ public class RabbitMQServiceImpl implements RabbitMQService {
                 e1.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void reSendRealTimeMessage(String messageId) {
+        MessageBean messageBean=messageHanderMapper.queryByMessageId(messageId);
+        if(null==messageBean){
+            logger.error("消息体主键{}不存在",messageId);
+        }else{
+            String exchageName=messageBean.getConsumerQueue();
+            String messageBody=messageBean.getMessageBody();
+            //创建一个通道
+            try {
+                AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties.Builder();
+                builder.messageId(messageId);
+                builder.deliveryMode(2);
+                AMQP.BasicProperties properties = builder.build();
+           /*声明绑定的交换机及类型*/
+                realTimeChannel.basicPublish(exchageName, "", properties, messageBody.getBytes("UTF-8"));
+                logger.info("发送消息主键{}成功",messageId);
+            } catch (IOException e) {
+                e.printStackTrace();
+                try {
+                /*关闭连接*/
+                    realTimeChannel.close();
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
+            }
+        }
+
+    }
+
+    private String generateMessageUUID(String exchageName){
+        String uuid = UUID.randomUUID().toString().replaceAll("-", "");
+        return exchageName+"-"+uuid;
     }
 
 }

@@ -1,6 +1,11 @@
 package com.cmsz.springboot.service;
 
+import com.cmsz.springboot.constans.PublicEnum;
+import com.cmsz.springboot.dao.mapper.MessageHanderMapper;
 import com.rabbitmq.client.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -11,6 +16,7 @@ import java.io.IOException;
  */
 @Component(value = "rabbitMQConsumer")
 public class RabbitMQConsumer {
+    private static final Logger logger = LoggerFactory.getLogger(RabbitMQConsumer.class);
 
     /*交换机名称*/
     private static final String EXCHANGE_NAME="amq.fanout";
@@ -26,6 +32,12 @@ public class RabbitMQConsumer {
 
     @Resource(name ="rabbitMQService")
     private RabbitMQService rabbitMQService;
+
+    @Autowired
+    private MessageHanderMapper messageHanderMapper;
+
+    @Resource(name = "messageHanderService")
+    private IMessageHanderService messageHanderService;
 
     /*根据交换机接受消息体,取消息的最新*/
     public void consumerMessage() throws Exception{
@@ -62,19 +74,29 @@ public class RabbitMQConsumer {
             final Consumer consumer = new DefaultConsumer(realTimeChannel) {
                 @Override
                 public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
+                    String messageId=properties.getMessageId();
                     String message = new String(body, "UTF-8");
+                    /*初始化插入数据库中*/
+                    messageHanderService.InsertOrUpdateMessageToDatabase(messageId,message,envelope.getExchange());
                     try {
-                        System.out.println(" [x] Received '" + message + "'");
-//                        doWork(message);
-                    } finally {
-                        System.out.println(" [x] Done");
+                        logger.info("消息队列queue{}接收到消息体{}",queue,message);
+//                        throw new Exception("异常测试");
+                        /*业务逻辑完成后确认消息体*/
+                        messageHanderService.confirmMessage(messageId,PublicEnum.SUCCESS_STATUS.getCode());
+                        logger.info("消息体id【{}】已正常消费",messageId);
                         realTimeChannel.basicAck(envelope.getDeliveryTag(), false);
+                    } catch (Exception e) {
+                        logger.error("消息体id[{}]消费失败,将存储数据库",messageId);
+                        Boolean result=messageHanderService.confirmMessage(messageId,PublicEnum.UN_CONSUMER_STATUS.getCode());
+                        if(result){
+                            realTimeChannel.basicAck(envelope.getDeliveryTag(), false);
+                            logger.info("消息体{}存入数据库成功",messageId);
+                        }
                     }
                 }
             };
-            boolean autoAck = false;
         try {
-            realTimeChannel.basicConsume(queue, autoAck, consumer);
+            realTimeChannel.basicConsume(queue, false, consumer);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -97,6 +119,7 @@ public class RabbitMQConsumer {
                                        AMQP.BasicProperties properties,
                                        byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
+                properties.getMessageId();
                 try {
                     System.out.println("Worker1 "+flag+" Received '" + message + "'"+System.currentTimeMillis());
 //                    rabbitMQService.sendRealTimeMessage("spms",message);
@@ -231,7 +254,4 @@ public class RabbitMQConsumer {
             e.printStackTrace();
         }
     }
-
-
-
 }

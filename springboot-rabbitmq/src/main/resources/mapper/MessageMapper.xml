@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.cmsz.springboot.dao.mapper.MessageHanderMapper" >
+  <resultMap id="BaseResultMap" type="com.cmsz.springboot.dao.MessageBean" >
+    <id column="message_id" property="messageId" jdbcType="VARCHAR" />
+    <result column="message_body" property="messageBody" jdbcType="CLOB" />
+    <result column="consumer_queue" property="consumerQueue" jdbcType="VARCHAR" />
+    <result column="send_nums" property="sendNums" jdbcType="INTEGER" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="update_time" property="updateTime" jdbcType="TIMESTAMP" />
+    <result column="is_dead" property="isDead" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="VARCHAR" />
+  </resultMap>
+
+  <sql id="Base_Column_List" >
+    message_id, message_body, consumer_queue, send_nums, create_time, update_time,is_dead,status
+  </sql>
+
+  <select id="queryByMessageId" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select
+    <include refid="Base_Column_List" />
+    from rabbitmq_base_message
+    where message_id = #{messageId,jdbcType=VARCHAR}
+  </select>
+
+
+  <select id="queryByMessageSelect" resultMap="BaseResultMap" parameterType="com.cmsz.springboot.dao.MessageBean" >
+    select
+    <include refid="Base_Column_List" />
+    from rabbitmq_base_message
+    <trim prefix="WHERE" prefixOverrides="AND">
+      <if test="messageId != null" >
+        AND message_id = #{messageId,jdbcType=VARCHAR}
+      </if>
+      <if test="messageBody != null" >
+        AND message_Body = #{messageBody,jdbcType=CLOB}
+      </if>
+      <if test="consumerQueue != null" >
+        AND consumer_queue = #{consumerQueue,jdbcType=VARCHAR}
+      </if>
+      <if test="sendNums != null" >
+        AND send_nums = #{sendNums,jdbcType=INTEGER}
+      </if>
+      <if test="createTime != null" >
+        AND create_time = #{createTime,jdbcType=TIMESTAMP}
+      </if>
+      <if test="updateTime != null" >
+        AND update_time = #{updateTime,jdbcType=TIMESTAMP}
+      </if>
+      <if test="isDead != null" >
+        AND is_dead = #{isDead,jdbcType=VARCHAR}
+      </if>
+      <if test="status != null" >
+        AND status = #{status,jdbcType=VARCHAR}
+      </if>
+    </trim>
+  </select>
+
+  <delete id="deleteMessageByMessageId" parameterType="java.lang.String" >
+    delete from rabbitmq_base_message
+    where message_id = #{message_id,jdbcType=VARCHAR}
+  </delete>
+
+  <insert id="insertMessage" parameterType="com.cmsz.springboot.dao.MessageBean" >
+    insert into rabbitmq_base_message (message_id, message_body, consumer_queue,
+      send_nums, create_time, update_time,is_dead,status)
+    values (#{messageId,jdbcType=VARCHAR}, #{messageBody,jdbcType=CLOB}, #{consumerQueue,jdbcType=VARCHAR},
+            #{sendNums,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP},
+            #{isDead,jdbcType=VARCHAR},#{status,jdbcType=VARCHAR})
+  </insert>
+
+  <insert id="insertSelective" parameterType="com.cmsz.springboot.dao.MessageBean" >
+    insert into rabbitmq_base_message
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="messageId != null" >
+        message_id,
+      </if>
+      <if test="messageBody != null" >
+        message_body,
+      </if>
+      <if test="consumerQueue != null" >
+        consumer_queue,
+      </if>
+      <if test="sendNums != null" >
+        send_nums,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+      <if test="updateTime != null" >
+        reback_status,
+      </if>
+      <if test="isDead != null" >
+        is_dead,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="messageId != null" >
+        #{messageId,jdbcType=VARCHAR},
+      </if>
+      <if test="messageBody != null" >
+        #{messageBody,jdbcType=CLOB},
+      </if>
+      <if test="consumerQueue != null" >
+        #{consumerQueue,jdbcType=VARCHAR},
+      </if>
+      <if test="sendNums != null" >
+        #{sendNums,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null" >
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="isDead != null" >
+        #{isDead,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+
+
+  <update id="updateMessageBySelect" parameterType="com.cmsz.springboot.dao.MessageBean" >
+    update rabbitmq_base_message
+    set
+      send_nums = #{sendNums,jdbcType=INTEGER},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      is_dead = #{isDead,jdbcType=VARCHAR},
+      status = #{status,jdbcType=VARCHAR}
+    where message_id = #{messageId,jdbcType=VARCHAR}
+  </update>
+
+</mapper>

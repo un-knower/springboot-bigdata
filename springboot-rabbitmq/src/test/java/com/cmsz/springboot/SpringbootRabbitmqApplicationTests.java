@@ -1,12 +1,9 @@
 package com.cmsz.springboot;
 
+import com.cmsz.springboot.dao.MessageBean;
+import com.cmsz.springboot.dao.mapper.MessageHanderMapper;
 import com.cmsz.springboot.service.RabbitMQConsumer;
 import com.cmsz.springboot.service.RabbitMQService;
-import com.cmsz.springboot.service.RedisLockService;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.QueueingConsumer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +12,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.concurrent.TimeoutException;
 
 @RunWith(SpringRunner.class)
@@ -28,19 +24,9 @@ public class SpringbootRabbitmqApplicationTests {
     @Resource(name = "rabbitMQConsumer")
 	private RabbitMQConsumer rabbitMQConsumer;
 
-	@Resource(name = "redisLockService")
-	private RedisLockService redisLockService;
+    @Autowired
+	private MessageHanderMapper messageHanderMapper;
 
-
-	@Test
-	public void contextLoads() throws Exception {
-		Boolean flag=redisLockService.tryLock("lile",5);
-		if(flag){
-			System.out.println("xxxxxxx");
-		}else{
-			System.out.println("已");
-		}
-	}
 
 	@Test
 	public void testSend() throws IOException, TimeoutException {
@@ -51,6 +37,11 @@ public class SpringbootRabbitmqApplicationTests {
    @Test
 	public void testDelayConsumer() throws Exception {
         rabbitMQConsumer.consumerRealTimeMessage("spms");
+	}
+	@Test
+	public void queryMessage() throws Exception {
+		MessageBean messageBean=messageHanderMapper.queryByMessageId("12");
+		System.out.println(messageBean);
 	}
 
 }
